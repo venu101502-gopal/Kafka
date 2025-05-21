@@ -38,7 +38,7 @@ ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["18.212.128.178/32"] # Consider restricting to your IP in production
+    cidr_blocks = ["0.0.0.0/0"] # Consider restricting to your IP in production
   }
 
   egress {
