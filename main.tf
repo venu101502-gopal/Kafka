@@ -152,17 +152,17 @@ resource "aws_subnet" "public_subnet" {
 resource "aws_subnet" "private_subnet_one" {
   vpc_id            = var.vpc_id
   cidr_block        = var.private_subnet_one_cidr
-  availability_zone = var.availability_zone
+  availability_zone = var.availability_zone_1
 }
 
 resource "aws_subnet" "private_subnet_two" {
   vpc_id            = var.vpc_id
   cidr_block        = var.private_subnet_two_cidr
-  availability_zone = var.availability_zone
+  availability_zone = var.availability_zone_2
 }
 
 resource "aws_subnet" "private_subnet_three" {
   vpc_id            = var.vpc_id
   cidr_block        = var.private_subnet_three_cidr
-  availability_zone = var.availability_zone
+  availability_zone = var.availability_zone_3
 }
