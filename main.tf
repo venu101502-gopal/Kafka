@@ -4,7 +4,7 @@ provider "aws" {
 
 data "aws_ami" "kafka_client" {
   most_recent = true
-  owners      = ["728138072953"] # Canonical
+  owners      = ["099720109477"] # Canonical
 
   filter {
     name   = "name"
@@ -30,7 +30,7 @@ resource "aws_security_group" "kafka_client_sg" {
     from_port   = 9092
     to_port     = 9092
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # WARNING: open access — consider locking this down
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -45,7 +45,7 @@ resource "aws_iam_role" "ec2_role" {
   name = "EC2KafkaRole"
 
   assume_role_policy = jsonencode({
-    Version = "2025-05-21",
+    Version = "2012-10-17",
     Statement = [
       {
         Action = "sts:AssumeRole",
@@ -110,37 +110,6 @@ resource "aws_instance" "kafka_client_ec2" {
   }
 }
 
-resource "aws_msk_cluster" "msk_cluster" {
-  cluster_name           = "MSKCluster"
-  kafka_version          = "2.2.1"
-  number_of_broker_nodes = 3
-
-  broker_node_group_info {
-    client_subnets = [
-      aws_subnet.private_subnet_one.id,
-      aws_subnet.private_subnet_two.id,
-      aws_subnet.private_subnet_three.id,
-    ]
-    instance_type  = "kafka.m5.large"
-    security_groups = [aws_security_group.kafka_client_sg.id]
-
-    storage_info {
-      ebs_storage_info {
-        volume_size = 10
-      }
-    }
-  }
-
-  encryption_info {
-    encryption_in_transit {
-      client_broker = "PLAINTEXT"
-      in_cluster    = false
-    }
-  }
-
-  enhanced_monitoring = "PER_TOPIC_PER_BROKER"
-}
-
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = var.vpc_id
   cidr_block              = var.public_subnet_cidr
@@ -164,4 +133,35 @@ resource "aws_subnet" "private_subnet_three" {
   vpc_id            = var.vpc_id
   cidr_block        = var.private_subnet_three_cidr
   availability_zone = var.availability_zone
+}
+
+resource "aws_msk_cluster" "msk_cluster" {
+  cluster_name           = "MSKCluster"
+  kafka_version          = "2.2.1"
+  number_of_broker_nodes = 3
+
+  broker_node_group_info {
+    client_subnets = [
+      aws_subnet.private_subnet_one.id,
+      aws_subnet.private_subnet_two.id,
+      aws_subnet.private_subnet_three.id,
+    ]
+    instance_type   = "kafka.m5.large"
+    security_groups = [aws_security_group.kafka_client_sg.id]
+
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
+      }
+    }
+  }
+
+  encryption_info {
+    encryption_in_transit {
+      client_broker = "PLAINTEXT"
+      in_cluster    = false
+    }
+  }
+
+  enhanced_monitoring = "PER_TOPIC_PER_BROKER"
 }
