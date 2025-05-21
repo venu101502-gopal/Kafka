@@ -4,7 +4,7 @@ provider "aws" {
 
 data "aws_ami" "kafka_client" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["728138072953"] # Canonical
 
   filter {
     name   = "name"
@@ -45,7 +45,7 @@ resource "aws_iam_role" "ec2_role" {
   name = "EC2KafkaRole"
 
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version = "2025-05-21",
     Statement = [
       {
         Action = "sts:AssumeRole",
