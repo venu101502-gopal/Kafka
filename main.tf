@@ -25,20 +25,12 @@ data "aws_ami" "kafka_client" {
 resource "aws_security_group" "kafka_client_sg" {
   name        = "kafka-client-sg"
   description = "Security Group for Kafka Client EC2 instance"
-  vpc_id      = var.vpc_id
 
   ingress {
     from_port   = 9092
     to_port     = 9092
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Consider restricting in prod
-  }
-
-ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # Consider restricting to your IP in production
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -76,43 +68,12 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
-
-resource "aws_iam_instance_profile" "ec2_instance_profile" {
-  name = "EC2MSKCFProfile"
-  role = aws_iam_role.ec2_role.name
-}
-
-resource "aws_subnet" "public_subnet" {
-  vpc_id                  = var.vpc_id
-  cidr_block              = var.public_subnet_cidr
-  availability_zone       = var.availability_zone_1
-  map_public_ip_on_launch = true
-}
-
-resource "aws_subnet" "private_subnet_one" {
-  vpc_id            = var.vpc_id
-  cidr_block        = var.private_subnet_one_cidr
-  availability_zone = var.availability_zone_1
-}
-
-resource "aws_subnet" "private_subnet_two" {
-  vpc_id            = var.vpc_id
-  cidr_block        = var.private_subnet_two_cidr
-  availability_zone = var.availability_zone_2
-}
-
-resource "aws_subnet" "private_subnet_three" {
-  vpc_id            = var.vpc_id
-  cidr_block        = var.private_subnet_three_cidr
-  availability_zone = var.availability_zone_3
-}
-
 resource "aws_instance" "kafka_client_ec2" {
   ami                    = data.aws_ami.kafka_client.id
   instance_type          = "t2.micro"
   key_name               = var.key_name
   subnet_id              = aws_subnet.public_subnet.id
-  vpc_security_group_ids = [aws_security_group.kafka_client_sg.id]
+  security_groups        = [aws_security_group.kafka_client_sg.name]
   iam_instance_profile   = aws_iam_instance_profile.ec2_instance_profile.name
 
   user_data = <<-EOT
@@ -149,13 +110,38 @@ resource "aws_instance" "kafka_client_ec2" {
   }
 }
 
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = var.vpc_id
+  cidr_block              = var.public_subnet_cidr
+  availability_zone       = var.availability_zone
+  map_public_ip_on_launch = true
+}
+
+resource "aws_subnet" "private_subnet_one" {
+  vpc_id            = var.vpc_id
+  cidr_block        = var.private_subnet_one_cidr
+  availability_zone = var.availability_zone
+}
+
+resource "aws_subnet" "private_subnet_two" {
+  vpc_id            = var.vpc_id
+  cidr_block        = var.private_subnet_two_cidr
+  availability_zone = var.availability_zone
+}
+
+resource "aws_subnet" "private_subnet_three" {
+  vpc_id            = var.vpc_id
+  cidr_block        = var.private_subnet_three_cidr
+  availability_zone = var.availability_zone
+}
+
 resource "aws_msk_cluster" "msk_cluster" {
   cluster_name           = "MSKCluster"
-  kafka_version          = "3.6.0"
+  kafka_version          = "2.2.1"
   number_of_broker_nodes = 3
 
   broker_node_group_info {
-    client_subnets  = [
+    client_subnets = [
       aws_subnet.private_subnet_one.id,
       aws_subnet.private_subnet_two.id,
       aws_subnet.private_subnet_three.id,
@@ -178,11 +164,4 @@ resource "aws_msk_cluster" "msk_cluster" {
   }
 
   enhanced_monitoring = "PER_TOPIC_PER_BROKER"
-
-  depends_on = [
-    aws_subnet.private_subnet_one,
-    aws_subnet.private_subnet_two,
-    aws_subnet.private_subnet_three
-  ]
 }
-
