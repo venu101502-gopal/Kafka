@@ -76,6 +76,12 @@ resource "aws_iam_instance_profile" "ec2_instance_profile" {
   role = aws_iam_role.ec2_role.name
 }
 
+
+resource "aws_iam_instance_profile" "ec2_instance_profile" {
+  name = "EC2MSKCFProfile"
+  role = aws_iam_role.ec2_role.name
+}
+
 resource "aws_subnet" "public_subnet" {
   vpc_id                  = var.vpc_id
   cidr_block              = var.public_subnet_cidr
